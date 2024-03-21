@@ -40,13 +40,13 @@
 
 | Management Interface | description | Type | VRF | IP Address | Gateway |
 | -------------------- | ----------- | ---- | --- | ---------- | ------- |
-| Management0 | oob_management | oob | default | 192.168.0.26/24 | 192.168.0.1 |
+| Management0 | oob_management | oob | MGMT | 192.168.0.26/24 | 192.168.0.1 |
 
 ##### IPv6
 
 | Management Interface | description | Type | VRF | IPv6 Address | IPv6 Gateway |
 | -------------------- | ----------- | ---- | --- | ------------ | ------------ |
-| Management0 | oob_management | oob | default | - | - |
+| Management0 | oob_management | oob | MGMT | - | - |
 
 #### Management Interfaces Device Configuration
 
@@ -55,6 +55,7 @@
 interface Management0
    description oob_management
    no shutdown
+   vrf MGMT
    ip address 192.168.0.26/24
 ```
 
@@ -81,7 +82,7 @@ dns domain atd.lab
 
 | VRF Name | IPv4 ACL | IPv6 ACL |
 | -------- | -------- | -------- |
-| default | - | - |
+| MGMT | - | - |
 
 #### Management API HTTP Configuration
 
@@ -91,7 +92,7 @@ management api http-commands
    protocol https
    no shutdown
    !
-   vrf default
+   vrf MGMT
       no shutdown
 ```
 
@@ -140,6 +141,8 @@ vlan internal order ascending range 1006 1199
 
 | Interface | Description | Type | Channel Group | IP Address | VRF |  MTU | Shutdown | ACL In | ACL Out |
 | --------- | ----------- | -----| ------------- | ---------- | ----| ---- | -------- | ------ | ------- |
+| Ethernet1 | P2P_LINK_TO_borderleaf1_Ethernet1 | routed | - | 192.168.99.1/31 | default | 1500 | False | - | - |
+| Ethernet2 | P2P_LINK_TO_borderleaf1_Ethernet2 | routed | - | 192.168.99.3/31 | default | 1500 | False | - | - |
 | Ethernet3 | P2P_LINK_TO_SPINE1_Ethernet8 | routed | - | 192.168.103.42/31 | default | 1500 | False | - | - |
 | Ethernet4 | P2P_LINK_TO_SPINE2_Ethernet8 | routed | - | 192.168.103.46/31 | default | 1500 | False | - | - |
 | Ethernet5 | P2P_LINK_TO_SPINE3_Ethernet8 | routed | - | 192.168.103.50/31 | default | 1500 | False | - | - |
@@ -148,6 +151,20 @@ vlan internal order ascending range 1006 1199
 #### Ethernet Interfaces Device Configuration
 
 ```eos
+!
+interface Ethernet1
+   description P2P_LINK_TO_borderleaf1_Ethernet1
+   no shutdown
+   mtu 1500
+   no switchport
+   ip address 192.168.99.1/31
+!
+interface Ethernet2
+   description P2P_LINK_TO_borderleaf1_Ethernet2
+   no shutdown
+   mtu 1500
+   no switchport
+   ip address 192.168.99.3/31
 !
 interface Ethernet3
    description P2P_LINK_TO_SPINE1_Ethernet8
@@ -223,12 +240,14 @@ service routing protocols model multi-agent
 | VRF | Routing Enabled |
 | --- | --------------- |
 | default | True |
+| MGMT | False |
 
 #### IP Routing Device Configuration
 
 ```eos
 !
 ip routing
+no ip routing vrf MGMT
 ```
 
 ### IPv6 Routing
@@ -238,7 +257,7 @@ ip routing
 | VRF | Routing Enabled |
 | --- | --------------- |
 | default | False |
-| default | false |
+| MGMT | false |
 
 ### Static Routes
 
@@ -246,13 +265,13 @@ ip routing
 
 | VRF | Destination Prefix | Next Hop IP             | Exit interface      | Administrative Distance       | Tag               | Route Name                    | Metric         |
 | --- | ------------------ | ----------------------- | ------------------- | ----------------------------- | ----------------- | ----------------------------- | -------------- |
-| default | 0.0.0.0/0 | 192.168.0.1 | - | 1 | - | - | - |
+| MGMT | 0.0.0.0/0 | 192.168.0.1 | - | 1 | - | - | - |
 
 #### Static Routes Device Configuration
 
 ```eos
 !
-ip route 0.0.0.0/0 192.168.0.1
+ip route vrf MGMT 0.0.0.0/0 192.168.0.1
 ```
 
 ### Router BGP
@@ -296,6 +315,8 @@ ip route 0.0.0.0/0 192.168.0.1
 
 | Neighbor | Remote AS | VRF | Shutdown | Send-community | Maximum-routes | Allowas-in | BFD | RIB Pre-Policy Retain | Route-Reflector Client | Passive |
 | -------- | --------- | --- | -------- | -------------- | -------------- | ---------- | --- | --------------------- | ---------------------- | ------- |
+| 192.168.99.0 | 65198 | default | - | Inherited from peer group IPv4-UNDERLAY-PEERS | Inherited from peer group IPv4-UNDERLAY-PEERS | - | - | - | - | - |
+| 192.168.99.2 | 65198 | default | - | Inherited from peer group IPv4-UNDERLAY-PEERS | Inherited from peer group IPv4-UNDERLAY-PEERS | - | - | - | - | - |
 | 192.168.101.11 | 65001 | default | - | Inherited from peer group EVPN-OVERLAY-PEERS | Inherited from peer group EVPN-OVERLAY-PEERS | - | Inherited from peer group EVPN-OVERLAY-PEERS | - | - | - |
 | 192.168.101.12 | 65001 | default | - | Inherited from peer group EVPN-OVERLAY-PEERS | Inherited from peer group EVPN-OVERLAY-PEERS | - | Inherited from peer group EVPN-OVERLAY-PEERS | - | - | - |
 | 192.168.101.13 | 65002 | default | - | Inherited from peer group EVPN-OVERLAY-PEERS | Inherited from peer group EVPN-OVERLAY-PEERS | - | Inherited from peer group EVPN-OVERLAY-PEERS | - | - | - |
@@ -333,6 +354,14 @@ router bgp 65000
    neighbor IPv4-UNDERLAY-PEERS peer group
    neighbor IPv4-UNDERLAY-PEERS send-community
    neighbor IPv4-UNDERLAY-PEERS maximum-routes 12000
+   neighbor 192.168.99.0 peer group IPv4-UNDERLAY-PEERS
+   neighbor 192.168.99.0 remote-as 65198
+   neighbor 192.168.99.0 local-as 65298 no-prepend replace-as
+   neighbor 192.168.99.0 description borderleaf1
+   neighbor 192.168.99.2 peer group IPv4-UNDERLAY-PEERS
+   neighbor 192.168.99.2 remote-as 65198
+   neighbor 192.168.99.2 local-as 65298 no-prepend replace-as
+   neighbor 192.168.99.2 description borderleaf1
    neighbor 192.168.101.11 peer group EVPN-OVERLAY-PEERS
    neighbor 192.168.101.11 remote-as 65001
    neighbor 192.168.101.11 description spine1
@@ -429,8 +458,11 @@ route-map RM-CONN-2-BGP permit 10
 
 | VRF Name | IP Routing |
 | -------- | ---------- |
+| MGMT | disabled |
 
 ### VRF Instances Device Configuration
 
 ```eos
+!
+vrf instance MGMT
 ```

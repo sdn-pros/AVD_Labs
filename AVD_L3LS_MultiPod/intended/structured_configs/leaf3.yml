@@ -1,12 +1,7 @@
 hostname: leaf3
 router_bgp:
-  as: '65102'
-  router_id: 192.168.101.3
-  bgp_defaults:
-  - no bgp default ipv4-unicast
-  - distance bgp 20 200 200
-  - graceful-restart restart-time 300
-  - graceful-restart
+  as: '65299'
+  router_id: 192.168.201.3
   bgp:
     default:
       ipv4_unicast: false
@@ -16,7 +11,7 @@ router_bgp:
   peer_groups:
   - name: MLAG-IPv4-UNDERLAY-PEER
     type: ipv4
-    remote_as: '65102'
+    remote_as: '65299'
     next_hop_self: true
     description: leaf4
     maximum_routes: 12000
@@ -45,11 +40,11 @@ router_bgp:
   - ip_address: 10.255.251.5
     peer_group: MLAG-IPv4-UNDERLAY-PEER
     description: leaf4
-  - ip_address: 192.168.103.8
+  - ip_address: 192.168.203.8
     peer_group: IPv4-UNDERLAY-PEERS
     remote_as: '65002'
     description: spine3_Ethernet5
-  - ip_address: 192.168.103.10
+  - ip_address: 192.168.203.10
     peer_group: IPv4-UNDERLAY-PEERS
     remote_as: '65002'
     description: spine4_Ethernet5
@@ -70,8 +65,8 @@ router_bgp:
       activate: true
   vrfs:
   - name: VRF_A
-    router_id: 192.168.101.3
-    rd: 192.168.101.3:10
+    router_id: 192.168.201.3
+    rd: 192.168.201.3:10
     route_targets:
       import:
       - address_family: evpn
@@ -86,17 +81,25 @@ router_bgp:
     neighbors:
     - ip_address: 10.255.251.5
       peer_group: MLAG-IPv4-UNDERLAY-PEER
-  vlan_aware_bundles:
-  - name: VRF_A
-    rd: 192.168.101.3:10
+  vlans:
+  - id: 10
+    tenant: ACME
+    rd: 192.168.201.3:10010
     route_targets:
       both:
-      - '10:10'
+      - 10010:10010
     redistribute_routes:
     - learned
-    vlan: 10,20
+  - id: 20
+    tenant: ACME
+    rd: 192.168.201.3:10020
+    route_targets:
+      both:
+      - 10020:10020
+    redistribute_routes:
+    - learned
 static_routes:
-- vrf: default
+- vrf: MGMT
   destination_address_prefix: 0.0.0.0/0
   gateway: 192.168.0.1
 service_routing_protocols_model: multi-agent
@@ -113,7 +116,7 @@ spanning_tree:
     priority: 16384
   no_spanning_tree_vlan: 4093-4094
 vrfs:
-- name: default
+- name: MGMT
   ip_routing: false
 - name: VRF_A
   tenant: ACME
@@ -122,13 +125,13 @@ management_interfaces:
 - name: Management0
   description: oob_management
   shutdown: false
-  vrf: default
+  vrf: MGMT
   ip_address: 192.168.0.23/24
   gateway: 192.168.0.1
   type: oob
 management_api_http:
   enable_vrfs:
-  - name: default
+  - name: MGMT
   enable_https: true
 vlans:
 - id: 4093
@@ -193,6 +196,14 @@ port_channel_interfaces:
   trunk_groups:
   - LEAF_PEER_L3
   - MLAG
+- name: Port-Channel7
+  description: host3_PortChannel host3
+  type: switched
+  shutdown: false
+  mode: access
+  vlans: '20'
+  spanning_tree_portfast: edge
+  mlag: 7
 ethernet_interfaces:
 - name: Ethernet1
   peer: leaf4
@@ -222,7 +233,7 @@ ethernet_interfaces:
   shutdown: false
   mtu: 1500
   type: routed
-  ip_address: 192.168.103.9/31
+  ip_address: 192.168.203.9/31
 - name: Ethernet6
   peer: spine4
   peer_interface: Ethernet5
@@ -231,7 +242,17 @@ ethernet_interfaces:
   shutdown: false
   mtu: 1500
   type: routed
-  ip_address: 192.168.103.11/31
+  ip_address: 192.168.203.11/31
+- name: Ethernet7
+  peer: host3
+  peer_interface: Ethernet1
+  peer_type: server
+  description: host3_Ethernet1
+  shutdown: false
+  type: port-channel-member
+  channel_group:
+    id: 7
+    mode: active
 mlag_configuration:
   domain_id: mlag2
   local_interface: Vlan4094
@@ -257,18 +278,18 @@ loopback_interfaces:
 - name: Loopback0
   description: EVPN_Overlay_Peering
   shutdown: false
-  ip_address: 192.168.101.3/32
+  ip_address: 192.168.201.3/32
 - name: Loopback1
   description: VTEP_VXLAN_Tunnel_Source
   shutdown: false
-  ip_address: 192.168.102.3/32
+  ip_address: 192.168.202.3/32
 prefix_lists:
 - name: PL-LOOPBACKS-EVPN-OVERLAY
   sequence_numbers:
   - sequence: 10
-    action: permit 192.168.101.0/24 eq 32
+    action: permit 192.168.201.0/24 eq 32
   - sequence: 20
-    action: permit 192.168.102.0/24 eq 32
+    action: permit 192.168.202.0/24 eq 32
 router_bfd:
   multihop:
     interval: 1200

@@ -52,13 +52,13 @@
 
 | Management Interface | description | Type | VRF | IP Address | Gateway |
 | -------------------- | ----------- | ---- | --- | ---------- | ------- |
-| Management0 | oob_management | oob | default | 192.168.0.23/24 | 192.168.0.1 |
+| Management0 | oob_management | oob | MGMT | 192.168.0.23/24 | 192.168.0.1 |
 
 ##### IPv6
 
 | Management Interface | description | Type | VRF | IPv6 Address | IPv6 Gateway |
 | -------------------- | ----------- | ---- | --- | ------------ | ------------ |
-| Management0 | oob_management | oob | default | - | - |
+| Management0 | oob_management | oob | MGMT | - | - |
 
 #### Management Interfaces Device Configuration
 
@@ -67,6 +67,7 @@
 interface Management0
    description oob_management
    no shutdown
+   vrf MGMT
    ip address 192.168.0.23/24
 ```
 
@@ -93,7 +94,7 @@ dns domain atd.lab
 
 | VRF Name | IPv4 ACL | IPv6 ACL |
 | -------- | -------- | -------- |
-| default | - | - |
+| MGMT | - | - |
 
 #### Management API HTTP Configuration
 
@@ -103,7 +104,7 @@ management api http-commands
    protocol https
    no shutdown
    !
-   vrf default
+   vrf MGMT
       no shutdown
 ```
 
@@ -217,6 +218,7 @@ vlan 4094
 | --------- | ----------- | ---- | ----- | ----------- | ----------- | ------------- |
 | Ethernet1 | MLAG_PEER_leaf4_Ethernet1 | *trunk | *- | *- | *['LEAF_PEER_L3', 'MLAG'] | 1 |
 | Ethernet2 | MLAG_PEER_leaf4_Ethernet2 | *trunk | *- | *- | *['LEAF_PEER_L3', 'MLAG'] | 1 |
+| Ethernet7 | host3_Ethernet1 | *access | *20 | *- | *- | 7 |
 
 *Inherited from Port-Channel Interface
 
@@ -224,8 +226,8 @@ vlan 4094
 
 | Interface | Description | Type | Channel Group | IP Address | VRF |  MTU | Shutdown | ACL In | ACL Out |
 | --------- | ----------- | -----| ------------- | ---------- | ----| ---- | -------- | ------ | ------- |
-| Ethernet5 | P2P_LINK_TO_SPINE3_Ethernet5 | routed | - | 192.168.103.9/31 | default | 1500 | False | - | - |
-| Ethernet6 | P2P_LINK_TO_SPINE4_Ethernet5 | routed | - | 192.168.103.11/31 | default | 1500 | False | - | - |
+| Ethernet5 | P2P_LINK_TO_SPINE3_Ethernet5 | routed | - | 192.168.203.9/31 | default | 1500 | False | - | - |
+| Ethernet6 | P2P_LINK_TO_SPINE4_Ethernet5 | routed | - | 192.168.203.11/31 | default | 1500 | False | - | - |
 
 #### Ethernet Interfaces Device Configuration
 
@@ -246,14 +248,19 @@ interface Ethernet5
    no shutdown
    mtu 1500
    no switchport
-   ip address 192.168.103.9/31
+   ip address 192.168.203.9/31
 !
 interface Ethernet6
    description P2P_LINK_TO_SPINE4_Ethernet5
    no shutdown
    mtu 1500
    no switchport
-   ip address 192.168.103.11/31
+   ip address 192.168.203.11/31
+!
+interface Ethernet7
+   description host3_Ethernet1
+   no shutdown
+   channel-group 7 mode active
 ```
 
 ### Port-Channel Interfaces
@@ -265,6 +272,7 @@ interface Ethernet6
 | Interface | Description | Type | Mode | VLANs | Native VLAN | Trunk Group | LACP Fallback Timeout | LACP Fallback Mode | MLAG ID | EVPN ESI |
 | --------- | ----------- | ---- | ---- | ----- | ----------- | ------------| --------------------- | ------------------ | ------- | -------- |
 | Port-Channel1 | MLAG_PEER_leaf4_Po1 | switched | trunk | - | - | ['LEAF_PEER_L3', 'MLAG'] | - | - | - | - |
+| Port-Channel7 | host3_PortChannel host3 | switched | access | 20 | - | - | - | - | 7 | - |
 
 #### Port-Channel Interfaces Device Configuration
 
@@ -277,6 +285,14 @@ interface Port-Channel1
    switchport mode trunk
    switchport trunk group LEAF_PEER_L3
    switchport trunk group MLAG
+!
+interface Port-Channel7
+   description host3_PortChannel host3
+   no shutdown
+   switchport
+   switchport access vlan 20
+   mlag 7
+   spanning-tree portfast
 ```
 
 ### Loopback Interfaces
@@ -287,8 +303,8 @@ interface Port-Channel1
 
 | Interface | Description | VRF | IP Address |
 | --------- | ----------- | --- | ---------- |
-| Loopback0 | EVPN_Overlay_Peering | default | 192.168.101.3/32 |
-| Loopback1 | VTEP_VXLAN_Tunnel_Source | default | 192.168.102.3/32 |
+| Loopback0 | EVPN_Overlay_Peering | default | 192.168.201.3/32 |
+| Loopback1 | VTEP_VXLAN_Tunnel_Source | default | 192.168.202.3/32 |
 
 ##### IPv6
 
@@ -305,12 +321,12 @@ interface Port-Channel1
 interface Loopback0
    description EVPN_Overlay_Peering
    no shutdown
-   ip address 192.168.101.3/32
+   ip address 192.168.201.3/32
 !
 interface Loopback1
    description VTEP_VXLAN_Tunnel_Source
    no shutdown
-   ip address 192.168.102.3/32
+   ip address 192.168.202.3/32
 ```
 
 ### VLAN Interfaces
@@ -440,6 +456,7 @@ ip virtual-router mac-address 00:1c:73:00:00:99
 | VRF | Routing Enabled |
 | --- | --------------- |
 | default | True |
+| MGMT | False |
 | VRF_A | True |
 
 #### IP Routing Device Configuration
@@ -447,6 +464,7 @@ ip virtual-router mac-address 00:1c:73:00:00:99
 ```eos
 !
 ip routing
+no ip routing vrf MGMT
 ip routing vrf VRF_A
 ```
 
@@ -457,7 +475,7 @@ ip routing vrf VRF_A
 | VRF | Routing Enabled |
 | --- | --------------- |
 | default | False |
-| default | false |
+| MGMT | false |
 | VRF_A | false |
 
 ### Static Routes
@@ -466,13 +484,13 @@ ip routing vrf VRF_A
 
 | VRF | Destination Prefix | Next Hop IP             | Exit interface      | Administrative Distance       | Tag               | Route Name                    | Metric         |
 | --- | ------------------ | ----------------------- | ------------------- | ----------------------------- | ----------------- | ----------------------------- | -------------- |
-| default | 0.0.0.0/0 | 192.168.0.1 | - | 1 | - | - | - |
+| MGMT | 0.0.0.0/0 | 192.168.0.1 | - | 1 | - | - | - |
 
 #### Static Routes Device Configuration
 
 ```eos
 !
-ip route 0.0.0.0/0 192.168.0.1
+ip route vrf MGMT 0.0.0.0/0 192.168.0.1
 ```
 
 ### Router BGP
@@ -481,14 +499,10 @@ ip route 0.0.0.0/0 192.168.0.1
 
 | BGP AS | Router ID |
 | ------ | --------- |
-| 65102|  192.168.101.3 |
+| 65299|  192.168.201.3 |
 
 | BGP Tuning |
 | ---------- |
-| no bgp default ipv4-unicast |
-| distance bgp 20 200 200 |
-| graceful-restart restart-time 300 |
-| graceful-restart |
 | no bgp default ipv4-unicast |
 | maximum-paths 4 ecmp 4 |
 
@@ -518,7 +532,7 @@ ip route 0.0.0.0/0 192.168.0.1
 | Settings | Value |
 | -------- | ----- |
 | Address Family | ipv4 |
-| Remote AS | 65102 |
+| Remote AS | 65299 |
 | Next-hop self | True |
 | Send community | all |
 | Maximum routes | 12000 |
@@ -530,8 +544,8 @@ ip route 0.0.0.0/0 192.168.0.1
 | 10.255.251.5 | Inherited from peer group MLAG-IPv4-UNDERLAY-PEER | default | - | Inherited from peer group MLAG-IPv4-UNDERLAY-PEER | Inherited from peer group MLAG-IPv4-UNDERLAY-PEER | - | - | - | - | - |
 | 192.168.101.13 | 65002 | default | - | Inherited from peer group EVPN-OVERLAY-PEERS | Inherited from peer group EVPN-OVERLAY-PEERS | - | Inherited from peer group EVPN-OVERLAY-PEERS | - | - | - |
 | 192.168.101.14 | 65002 | default | - | Inherited from peer group EVPN-OVERLAY-PEERS | Inherited from peer group EVPN-OVERLAY-PEERS | - | Inherited from peer group EVPN-OVERLAY-PEERS | - | - | - |
-| 192.168.103.8 | 65002 | default | - | Inherited from peer group IPv4-UNDERLAY-PEERS | Inherited from peer group IPv4-UNDERLAY-PEERS | - | - | - | - | - |
-| 192.168.103.10 | 65002 | default | - | Inherited from peer group IPv4-UNDERLAY-PEERS | Inherited from peer group IPv4-UNDERLAY-PEERS | - | - | - | - | - |
+| 192.168.203.8 | 65002 | default | - | Inherited from peer group IPv4-UNDERLAY-PEERS | Inherited from peer group IPv4-UNDERLAY-PEERS | - | - | - | - | - |
+| 192.168.203.10 | 65002 | default | - | Inherited from peer group IPv4-UNDERLAY-PEERS | Inherited from peer group IPv4-UNDERLAY-PEERS | - | - | - | - | - |
 | 10.255.251.5 | Inherited from peer group MLAG-IPv4-UNDERLAY-PEER | VRF_A | - | Inherited from peer group MLAG-IPv4-UNDERLAY-PEER | Inherited from peer group MLAG-IPv4-UNDERLAY-PEER | - | - | - | - | - |
 
 #### Router BGP EVPN Address Family
@@ -542,30 +556,27 @@ ip route 0.0.0.0/0 192.168.0.1
 | ---------- | -------- | ------------- |
 | EVPN-OVERLAY-PEERS | True | default |
 
-#### Router BGP VLAN Aware Bundles
+#### Router BGP VLANs
 
-| VLAN Aware Bundle | Route-Distinguisher | Both Route-Target | Import Route Target | Export Route-Target | Redistribute | VLANs |
-| ----------------- | ------------------- | ----------------- | ------------------- | ------------------- | ------------ | ----- |
-| VRF_A | 192.168.101.3:10 | 10:10 | - | - | learned | 10,20 |
+| VLAN | Route-Distinguisher | Both Route-Target | Import Route Target | Export Route-Target | Redistribute |
+| ---- | ------------------- | ----------------- | ------------------- | ------------------- | ------------ |
+| 10 | 192.168.201.3:10010 | 10010:10010 | - | - | learned |
+| 20 | 192.168.201.3:10020 | 10020:10020 | - | - | learned |
 
 #### Router BGP VRFs
 
 | VRF | Route-Distinguisher | Redistribute |
 | --- | ------------------- | ------------ |
-| VRF_A | 192.168.101.3:10 | connected |
+| VRF_A | 192.168.201.3:10 | connected |
 
 #### Router BGP Device Configuration
 
 ```eos
 !
-router bgp 65102
-   router-id 192.168.101.3
+router bgp 65299
+   router-id 192.168.201.3
    maximum-paths 4 ecmp 4
    no bgp default ipv4-unicast
-   no bgp default ipv4-unicast
-   distance bgp 20 200 200
-   graceful-restart restart-time 300
-   graceful-restart
    neighbor EVPN-OVERLAY-PEERS peer group
    neighbor EVPN-OVERLAY-PEERS update-source Loopback0
    neighbor EVPN-OVERLAY-PEERS bfd
@@ -576,7 +587,7 @@ router bgp 65102
    neighbor IPv4-UNDERLAY-PEERS send-community
    neighbor IPv4-UNDERLAY-PEERS maximum-routes 12000
    neighbor MLAG-IPv4-UNDERLAY-PEER peer group
-   neighbor MLAG-IPv4-UNDERLAY-PEER remote-as 65102
+   neighbor MLAG-IPv4-UNDERLAY-PEER remote-as 65299
    neighbor MLAG-IPv4-UNDERLAY-PEER next-hop-self
    neighbor MLAG-IPv4-UNDERLAY-PEER description leaf4
    neighbor MLAG-IPv4-UNDERLAY-PEER send-community
@@ -590,19 +601,23 @@ router bgp 65102
    neighbor 192.168.101.14 peer group EVPN-OVERLAY-PEERS
    neighbor 192.168.101.14 remote-as 65002
    neighbor 192.168.101.14 description spine4
-   neighbor 192.168.103.8 peer group IPv4-UNDERLAY-PEERS
-   neighbor 192.168.103.8 remote-as 65002
-   neighbor 192.168.103.8 description spine3_Ethernet5
-   neighbor 192.168.103.10 peer group IPv4-UNDERLAY-PEERS
-   neighbor 192.168.103.10 remote-as 65002
-   neighbor 192.168.103.10 description spine4_Ethernet5
+   neighbor 192.168.203.8 peer group IPv4-UNDERLAY-PEERS
+   neighbor 192.168.203.8 remote-as 65002
+   neighbor 192.168.203.8 description spine3_Ethernet5
+   neighbor 192.168.203.10 peer group IPv4-UNDERLAY-PEERS
+   neighbor 192.168.203.10 remote-as 65002
+   neighbor 192.168.203.10 description spine4_Ethernet5
    redistribute connected route-map RM-CONN-2-BGP
    !
-   vlan-aware-bundle VRF_A
-      rd 192.168.101.3:10
-      route-target both 10:10
+   vlan 10
+      rd 192.168.201.3:10010
+      route-target both 10010:10010
       redistribute learned
-      vlan 10,20
+   !
+   vlan 20
+      rd 192.168.201.3:10020
+      route-target both 10020:10020
+      redistribute learned
    !
    address-family evpn
       neighbor EVPN-OVERLAY-PEERS activate
@@ -613,10 +628,10 @@ router bgp 65102
       neighbor MLAG-IPv4-UNDERLAY-PEER activate
    !
    vrf VRF_A
-      rd 192.168.101.3:10
+      rd 192.168.201.3:10
       route-target import evpn 10:10
       route-target export evpn 10:10
-      router-id 192.168.101.3
+      router-id 192.168.201.3
       neighbor 10.255.251.5 peer group MLAG-IPv4-UNDERLAY-PEER
       redistribute connected
 ```
@@ -664,16 +679,16 @@ router bfd
 
 | Sequence | Action |
 | -------- | ------ |
-| 10 | permit 192.168.101.0/24 eq 32 |
-| 20 | permit 192.168.102.0/24 eq 32 |
+| 10 | permit 192.168.201.0/24 eq 32 |
+| 20 | permit 192.168.202.0/24 eq 32 |
 
 #### Prefix-lists Device Configuration
 
 ```eos
 !
 ip prefix-list PL-LOOPBACKS-EVPN-OVERLAY
-   seq 10 permit 192.168.101.0/24 eq 32
-   seq 20 permit 192.168.102.0/24 eq 32
+   seq 10 permit 192.168.201.0/24 eq 32
+   seq 20 permit 192.168.202.0/24 eq 32
 ```
 
 ### Route-maps
@@ -710,11 +725,14 @@ route-map RM-MLAG-PEER-IN permit 10
 
 | VRF Name | IP Routing |
 | -------- | ---------- |
+| MGMT | disabled |
 | VRF_A | enabled |
 
 ### VRF Instances Device Configuration
 
 ```eos
+!
+vrf instance MGMT
 !
 vrf instance VRF_A
 ```

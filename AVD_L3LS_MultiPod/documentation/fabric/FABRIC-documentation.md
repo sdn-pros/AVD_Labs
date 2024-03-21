@@ -19,8 +19,8 @@
 | --- | ---- | ---- | ------------- | -------- | -------------------------- | ------------- |
 | FABRIC | super-spine | borderleaf1 | 192.168.0.25/24 | cEOS | Provisioned | - |
 | FABRIC | super-spine | borderleaf2 | 192.168.0.26/24 | cEOS | Provisioned | - |
-| FABRIC | l3leaf | leaf1 | 192.168.0.21/24 | cEOS | Provisioned | - |
-| FABRIC | l3leaf | leaf2 | 192.168.0.22/24 | cEOS | Provisioned | - |
+| FABRIC | l3leaf | leaf1 | 192.168.0.21/24 | cEOS-lab | Provisioned | - |
+| FABRIC | l3leaf | leaf2 | 192.168.0.22/24 | cEOS-lab | Provisioned | - |
 | FABRIC | l3leaf | leaf3 | 192.168.0.23/24 | cEOS | Provisioned | - |
 | FABRIC | l3leaf | leaf4 | 192.168.0.24/24 | cEOS | Provisioned | - |
 | FABRIC | spine | spine1 | 192.168.0.11/24 | cEOS | Provisioned | - |
@@ -39,6 +39,8 @@
 
 | Type | Node | Node Interface | Peer Type | Peer Node | Peer Interface |
 | ---- | ---- | -------------- | --------- | ----------| -------------- |
+| super-spine | borderleaf1 | Ethernet1 | super-spine | borderleaf2 | Ethernet1 |
+| super-spine | borderleaf1 | Ethernet2 | super-spine | borderleaf2 | Ethernet2 |
 | super-spine | borderleaf1 | Ethernet3 | spine | spine1 | Ethernet7 |
 | super-spine | borderleaf1 | Ethernet4 | spine | spine2 | Ethernet7 |
 | super-spine | borderleaf1 | Ethernet5 | spine | spine3 | Ethernet7 |
@@ -66,12 +68,15 @@
 
 | Uplink IPv4 Pool | Available Addresses | Assigned addresses | Assigned Address % |
 | ---------------- | ------------------- | ------------------ | ------------------ |
-| 192.168.103.0/24 | 256 | 32 | 12.5 % |
+| 192.168.103.0/24 | 256 | 24 | 9.38 % |
+| 192.168.203.0/24 | 256 | 8 | 3.13 % |
 
 ### Point-To-Point Links Node Allocation
 
 | Node | Node Interface | Node IP Address | Peer Node | Peer Interface | Peer IP Address |
 | ---- | -------------- | --------------- | --------- | -------------- | --------------- |
+| borderleaf1 | Ethernet1 | 192.168.99.0/31 | borderleaf2 | Ethernet1 | 192.168.99.1/31 |
+| borderleaf1 | Ethernet2 | 192.168.99.2/31 | borderleaf2 | Ethernet2 | 192.168.99.3/31 |
 | borderleaf1 | Ethernet3 | 192.168.103.40/31 | spine1 | Ethernet7 | 192.168.103.41/31 |
 | borderleaf1 | Ethernet4 | 192.168.103.44/31 | spine2 | Ethernet7 | 192.168.103.45/31 |
 | borderleaf1 | Ethernet5 | 192.168.103.48/31 | spine3 | Ethernet7 | 192.168.103.49/31 |
@@ -84,16 +89,17 @@
 | leaf1 | Ethernet4 | 192.168.103.3/31 | spine2 | Ethernet3 | 192.168.103.2/31 |
 | leaf2 | Ethernet3 | 192.168.103.5/31 | spine1 | Ethernet4 | 192.168.103.4/31 |
 | leaf2 | Ethernet4 | 192.168.103.7/31 | spine2 | Ethernet4 | 192.168.103.6/31 |
-| leaf3 | Ethernet5 | 192.168.103.9/31 | spine3 | Ethernet5 | 192.168.103.8/31 |
-| leaf3 | Ethernet6 | 192.168.103.11/31 | spine4 | Ethernet5 | 192.168.103.10/31 |
-| leaf4 | Ethernet5 | 192.168.103.13/31 | spine3 | Ethernet6 | 192.168.103.12/31 |
-| leaf4 | Ethernet6 | 192.168.103.15/31 | spine4 | Ethernet6 | 192.168.103.14/31 |
+| leaf3 | Ethernet5 | 192.168.203.9/31 | spine3 | Ethernet5 | 192.168.203.8/31 |
+| leaf3 | Ethernet6 | 192.168.203.11/31 | spine4 | Ethernet5 | 192.168.203.10/31 |
+| leaf4 | Ethernet5 | 192.168.203.13/31 | spine3 | Ethernet6 | 192.168.203.12/31 |
+| leaf4 | Ethernet6 | 192.168.203.15/31 | spine4 | Ethernet6 | 192.168.203.14/31 |
 
 ### Loopback Interfaces (BGP EVPN Peering)
 
 | Loopback Pool | Available Addresses | Assigned addresses | Assigned Address % |
 | ------------- | ------------------- | ------------------ | ------------------ |
-| 192.168.101.0/24 | 256 | 10 | 3.91 % |
+| 192.168.101.0/24 | 256 | 8 | 3.13 % |
+| 192.168.201.0/24 | 256 | 2 | 0.79 % |
 
 ### Loopback0 Interfaces Node Allocation
 
@@ -103,8 +109,8 @@
 | FABRIC | borderleaf2 | 192.168.101.202/32 |
 | FABRIC | leaf1 | 192.168.101.1/32 |
 | FABRIC | leaf2 | 192.168.101.2/32 |
-| FABRIC | leaf3 | 192.168.101.3/32 |
-| FABRIC | leaf4 | 192.168.101.4/32 |
+| FABRIC | leaf3 | 192.168.201.3/32 |
+| FABRIC | leaf4 | 192.168.201.4/32 |
 | FABRIC | spine1 | 192.168.101.11/32 |
 | FABRIC | spine2 | 192.168.101.12/32 |
 | FABRIC | spine3 | 192.168.101.13/32 |
@@ -114,7 +120,8 @@
 
 | VTEP Loopback Pool | Available Addresses | Assigned addresses | Assigned Address % |
 | --------------------- | ------------------- | ------------------ | ------------------ |
-| 192.168.102.0/24 | 256 | 4 | 1.57 % |
+| 192.168.102.0/24 | 256 | 2 | 0.79 % |
+| 192.168.202.0/24 | 256 | 2 | 0.79 % |
 
 ### VTEP Loopback Node allocation
 
@@ -122,5 +129,5 @@
 | --- | ---- | --------- |
 | FABRIC | leaf1 | 192.168.102.1/32 |
 | FABRIC | leaf2 | 192.168.102.1/32 |
-| FABRIC | leaf3 | 192.168.102.3/32 |
-| FABRIC | leaf4 | 192.168.102.3/32 |
+| FABRIC | leaf3 | 192.168.202.3/32 |
+| FABRIC | leaf4 | 192.168.202.3/32 |

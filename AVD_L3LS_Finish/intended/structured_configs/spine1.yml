@@ -2,9 +2,6 @@ hostname: spine1
 router_bgp:
   as: '65001'
   router_id: 192.168.101.11
-  bgp_defaults:
-  - no bgp default ipv4-unicast
-  - distance bgp 20 200 200
   bgp:
     default:
       ipv4_unicast: false

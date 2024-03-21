@@ -5,8 +5,7 @@ fabric_name: FABRIC
 # Various fabric settings
 
 # Enable vlan aware bundles
-evpn_vlan_aware_bundles: true
-
+evpn_vlan_aware_bundles: false
 
 # Spine Switches
 super_spine:
@@ -51,11 +50,29 @@ bfd_multihop:
 
 # Needed for vEOS/cEOS
 
-# bgp_update_wait_install: false
-# bgp_update_wait_for_convergence: false
+bgp_update_wait_install: false
+bgp_update_wait_for_convergence: false
 
 # Needed for Arista ATD Lab Environment
 dns_domain: atd.lab
-mgmt_interface: Management1
-mgmt_interface_vrf: default
+mgmt_interface: Management0
+mgmt_interface_vrf: MGMT
 mgmt_gateway: 192.168.0.1
+
+
+l3_edge:
+  p2p_links_ip_pools:
+    dci_evpn_gateway: 192.168.99.0/24
+  p2p_links:
+    - id: 1
+      ip_pool: dci_evpn_gateway
+      nodes: [borderleaf1, borderleaf2]
+      interfaces: [Ethernet1, Ethernet1]
+      as: [65198, 65298]
+      include_in_underlay_protocol: true
+    - id: 2
+      ip_pool: dci_evpn_gateway
+      nodes: [borderleaf1, borderleaf2]
+      interfaces: [Ethernet2, Ethernet2]
+      as: [65198, 65298]
+      include_in_underlay_protocol: true

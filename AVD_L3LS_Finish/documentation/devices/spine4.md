@@ -269,8 +269,6 @@ ip route vrf MGMT 0.0.0.0/0 192.168.0.1
 | BGP Tuning |
 | ---------- |
 | no bgp default ipv4-unicast |
-| distance bgp 20 200 200 |
-| no bgp default ipv4-unicast |
 | maximum-paths 4 ecmp 4 |
 
 #### Router BGP Peer Groups
@@ -324,8 +322,6 @@ router bgp 65001
    router-id 192.168.101.14
    maximum-paths 4 ecmp 4
    no bgp default ipv4-unicast
-   no bgp default ipv4-unicast
-   distance bgp 20 200 200
    neighbor EVPN-OVERLAY-PEERS peer group
    neighbor EVPN-OVERLAY-PEERS next-hop-unchanged
    neighbor EVPN-OVERLAY-PEERS update-source Loopback0
