@@ -10,12 +10,12 @@ spine:
     #   - 'distance bgp 20 200 200'
     mlag: false
   nodes:
-    spine3:
+    - name: spine3
       id: 13
       mgmt_ip: 192.168.0.13/24
       evpn_route_servers: [spine1, spine2]
 
-    spine4:
+    - name: spine4
       id: 14
       mgmt_ip: 192.168.0.14/24
       evpn_route_servers: [spine1, spine2]
@@ -49,11 +49,11 @@ l3leaf:
     mlag2:
       bgp_as: 65299
       nodes:
-        leaf3:
+        - name: leaf3
           id: 3
           mgmt_ip: 192.168.0.23/24
           uplink_switch_interfaces: [Ethernet5, Ethernet5]
-        leaf4:
+        - name: leaf4
           id: 4
           mgmt_ip: 192.168.0.24/24
           uplink_switch_interfaces: [Ethernet6, Ethernet6]

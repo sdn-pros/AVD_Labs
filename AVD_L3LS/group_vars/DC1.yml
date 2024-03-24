@@ -7,12 +7,11 @@ spine:
     loopback_ipv4_pool: 192.168.101.0/24
     mlag: false
   nodes:
-    spine1:
+    - name: spine1
       id: 11
       mgmt_ip: 192.168.0.11/24
       evpn_route_servers: [spine3, spine4]
-
-    spine2:
+    - name: spine2
       id: 12
       mgmt_ip: 192.168.0.12/24
       evpn_route_servers: [spine3, spine4]
@@ -31,11 +30,6 @@ l3leaf:
     mlag_peer_ipv4_pool: 10.255.252.0/24 # MLAG peer IPs
     mlag_peer_l3_ipv4_pool: 10.255.251.0/24 # iBGP peering between MLAG peers
     virtual_router_mac_address: 00:1c:73:00:00:99 # The vMAC for the anycast gateways
-    # bgp_defaults:
-    #   - 'no bgp default ipv4-unicast'
-    #   - 'distance bgp 20 200 200'
-    #   - 'graceful-restart restart-time 300'
-    #   - 'graceful-restart'
     spanning_tree_mode: mstp # Spanning Tree is still enabled even in EVPN setups
     spanning_tree_priority: 16384 
     mlag: true # By default, use MLAG
@@ -49,11 +43,11 @@ l3leaf:
   node_groups:
     mlag1:
       nodes:
-        leaf1:
+        - name: leaf1
           id: 1
           mgmt_ip: 192.168.0.21/24
           uplink_switch_interfaces: [Ethernet3, Ethernet3]
-        leaf2:
+        - name: leaf2
           id: 2
           mgmt_ip: 192.168.0.22/24
           uplink_switch_interfaces: [Ethernet4, Ethernet4]
